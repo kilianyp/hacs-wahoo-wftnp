@@ -8,6 +8,7 @@ from typing import Any, Dict
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     DOMAIN,
@@ -21,6 +22,7 @@ from .const import (
 from .coordinator import WahooKickrCoordinator
 
 PLATFORMS: list[str] = ["sensor"]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
