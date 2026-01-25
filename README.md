@@ -5,19 +5,33 @@ This repository contains a custom Home Assistant integration for a Wahoo KICKR C
 ## Important notes
 
 - This integration is largely AI-generated.
-- The AI used this project as a source reference:
 - I do not take any responsibility for damage of any kind. Use at your own risk.
 - Tested with Kickr Core V2 (Wifi only)
-
-```
-https://github.com/elfrances/wahoo-fitness-tnp
-```
+- Big thank you to @elfrances whose [work](https://github.com/elfrances/wahoo-fitness-tnp) served as the basis.
 
 ## What it does
 
 - Discovers and connects to Wahoo WFTNP devices on the LAN (optionally via zeroconf).
 - Exposes sensors for speed, cadence, and power.
 - Provides services for ERG and grade control, plus basic control point actions.
+
+![alt text](image.png)
+
+## Devices (WiFi-capable)
+
+At the time of this writing (late 2025) WFTNP is available on a wide range of indoor trainers from different manufacturers. The table below lists some of them:
+
+| Brand | Model | WiFi |
+| --- | --- | --- |
+| Elite | Justo 2 | Y |
+| Elite | Avanti | Y |
+| JetBlack | Victory | Y |
+| Tacx | Neo 3M | Y |
+| Wahoo | KICKR V6 | Y |
+| Wahoo | KICKR BIKE V2 | Y |
+| Wahoo | KICKR MOVE | Y |
+| Wahoo | KICKR BIKE SHIFT | Y |
+| Wahoo | KICKR CORE V2 | Y |
 
 ## Installation (custom component)
 
@@ -32,7 +46,7 @@ https://github.com/elfrances/wahoo-fitness-tnp
 3. Add this repository URL and select category “Integration”:
 
 ```
-https://github.com/kilianyp/hacs-wahoo-kickr-core
+https://github.com/kilianyp/hacs-wahoo-wftnp
 ```
 
 4. Install “Wahoo Kickr Core” from HACS.
