@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Wahoo Kickr Core",
+        "description": "Select a discovered trainer or set up manually.",
+        "data": {
+          "device": "Device"
+        }
+      },
+      "manual": {
+        "title": "Manual setup",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name",
+          "address": "Address"
+        }
+      }
+    },
+    "abort": {
+      "not_found": "Device no longer found."
+    }
+  }
+}

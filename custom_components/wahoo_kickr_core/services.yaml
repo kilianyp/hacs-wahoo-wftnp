@@ -1,0 +1,75 @@
+set_erg_watts:
+  name: Set ERG watts
+  description: Set target power (ERG mode) in watts.
+  fields:
+    entry_id:
+      name: Entry ID
+      description: Config entry ID to target (optional if only one entry).
+      example: "abcd1234"
+    watts:
+      name: Watts
+      description: Target power in watts.
+      required: true
+      example: 200
+
+set_grade:
+  name: Set grade
+  description: Set simulated grade and rolling resistance parameters.
+  fields:
+    entry_id:
+      name: Entry ID
+      description: Config entry ID to target (optional if only one entry).
+      example: "abcd1234"
+    grade_percent:
+      name: Grade percent
+      description: Grade in percent.
+      required: true
+      example: 3.5
+    wind_mps:
+      name: Wind speed (m/s)
+      description: Simulated wind speed in meters per second.
+      example: 0.0
+    crr:
+      name: Rolling resistance
+      description: Coefficient of rolling resistance.
+      example: 0.004
+    cw:
+      name: Aerodynamic drag
+      description: Cw value (kg/m).
+      example: 0.51
+
+request_control:
+  name: Request control
+  description: Request control of the trainer.
+  fields:
+    entry_id:
+      name: Entry ID
+      description: Config entry ID to target (optional if only one entry).
+      example: "abcd1234"
+
+reset:
+  name: Reset
+  description: Reset the trainer control state.
+  fields:
+    entry_id:
+      name: Entry ID
+      description: Config entry ID to target (optional if only one entry).
+      example: "abcd1234"
+
+start_training:
+  name: Start training
+  description: Start training session.
+  fields:
+    entry_id:
+      name: Entry ID
+      description: Config entry ID to target (optional if only one entry).
+      example: "abcd1234"
+
+stop_training:
+  name: Stop training
+  description: Stop training session (if supported).
+  fields:
+    entry_id:
+      name: Entry ID
+      description: Config entry ID to target (optional if only one entry).
+      example: "abcd1234"
