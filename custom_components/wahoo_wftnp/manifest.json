@@ -1,6 +1,6 @@
 {
-  "domain": "wahoo_kickr_core",
-  "name": "Wahoo Kickr Core",
+  "domain": "wahoo_wftnp",
+  "name": "Wahoo Fitness TNP",
   "codeowners": ["@kilianyp"],
   "config_flow": true,
   "documentation": "https://github.com/kilianyp/hacs-wahoo-wftnp",
