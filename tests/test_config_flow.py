@@ -9,6 +9,7 @@ import pytest
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.data_entry_flow import FlowResultType
 
+from custom_components.wahoo_wftnp import config_flow
 from custom_components.wahoo_wftnp.const import (
     CONF_ADDRESS,
     CONF_HOST,
@@ -33,10 +34,7 @@ async def test_user_flow_selects_discovered_device(hass) -> None:
         )
     }
 
-    with patch(
-        "custom_components.wahoo_wftnp.config_flow.WFTNPClient.discover",
-        return_value=devices,
-    ):
+    with patch.object(config_flow.WFTNPClient, "discover", return_value=devices):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -56,10 +54,7 @@ async def test_user_flow_selects_discovered_device(hass) -> None:
 
 @pytest.mark.usefixtures("hass")
 async def test_user_flow_manual(hass) -> None:
-    with patch(
-        "custom_components.wahoo_wftnp.config_flow.WFTNPClient.discover",
-        return_value={},
-    ):
+    with patch.object(config_flow.WFTNPClient, "discover", return_value={}):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
