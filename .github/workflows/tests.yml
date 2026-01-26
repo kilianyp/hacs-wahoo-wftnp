@@ -14,12 +14,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-homeassistant-custom-component zeroconf
+          pip install pytest
 
       - name: Run tests
         env:
