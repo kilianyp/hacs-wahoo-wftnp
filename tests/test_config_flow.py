@@ -9,14 +9,14 @@ import pytest
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.wahoo_kickr_core.const import (
+from custom_components.wahoo_wftnp.const import (
     CONF_ADDRESS,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
     DOMAIN,
 )
-from custom_components.wahoo_kickr_core.wftnp import DiscoveredDevice
+from custom_components.wahoo_wftnp.wftnp import DiscoveredDevice
 
 pytestmark = pytest.mark.asyncio
 
@@ -34,7 +34,7 @@ async def test_user_flow_selects_discovered_device(hass) -> None:
     }
 
     with patch(
-        "custom_components.wahoo_kickr_core.config_flow.WFTNPClient.discover",
+        "custom_components.wahoo_wftnp.config_flow.WFTNPClient.discover",
         return_value=devices,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -57,7 +57,7 @@ async def test_user_flow_selects_discovered_device(hass) -> None:
 @pytest.mark.usefixtures("hass")
 async def test_user_flow_manual(hass) -> None:
     with patch(
-        "custom_components.wahoo_kickr_core.config_flow.WFTNPClient.discover",
+        "custom_components.wahoo_wftnp.config_flow.WFTNPClient.discover",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_init(

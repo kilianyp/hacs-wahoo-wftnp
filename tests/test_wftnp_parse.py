@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import struct
 
-from custom_components.wahoo_kickr_core.wftnp import parse_indoor_bike_data
+from custom_components.wahoo_wftnp.wftnp import parse_indoor_bike_data
 
 
 def test_parse_indoor_bike_data_speed_cadence_power() -> None:

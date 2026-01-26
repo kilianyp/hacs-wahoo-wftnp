@@ -1,7 +1,7 @@
 """Constants for the Wahoo Kickr Core integration."""
 
-DOMAIN = "wahoo_kickr_core"
-NAME = "Wahoo Kickr Core"
+DOMAIN = "wahoo_wftnp"
+NAME = "Wahoo Fitness TNP"
 
 CONF_HOST = "host"
 CONF_PORT = "port"

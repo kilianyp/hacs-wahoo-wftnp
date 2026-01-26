@@ -35,7 +35,7 @@ At the time of this writing (late 2025) WFTNP is available on a wide range of in
 
 ## Installation (custom component)
 
-1. Copy `custom_components/wahoo_kickr_core` into your Home Assistant config directory.
+1. Copy `custom_components/wftnp` into your Home Assistant config directory.
 2. Restart Home Assistant.
 3. Add the integration via Settings -> Devices & Services.
 
