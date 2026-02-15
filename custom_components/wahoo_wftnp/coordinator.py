@@ -69,6 +69,8 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         self._lock = asyncio.Lock()
         self._connected = False
         self._has_control = False
+        self._manufacturer = "Wahoo"
+        self._model = "KICKR CORE"
         self._unsub_poll = None
         self._reconnect_notice_sent = False
         self._sleep_timeout = float(
@@ -99,6 +101,14 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
     @property
     def is_connected(self) -> bool:
         return self._connected
+
+    @property
+    def manufacturer(self) -> str:
+        return self._manufacturer
+
+    @property
+    def model(self) -> str:
+        return self._model
 
     async def async_setup(self) -> None:
         async def on_notify(char_uuid, value: bytes) -> None:
@@ -240,6 +250,7 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             await self._client.ftms_init(
                 subscribe_indoor_bike_data=True, subscribe_status=False
             )
+            await self._refresh_device_metadata()
             self._connected = True
             self._reconnect_notice_sent = False
             _LOGGER.info(
@@ -256,6 +267,19 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             await self._client.close()
             self._connected = False
             raise
+
+    async def _refresh_device_metadata(self) -> None:
+        """Best-effort read of manufacturer/model from hardware."""
+        try:
+            manufacturer, model = await self._client.read_device_information()
+        except Exception as err:
+            _LOGGER.debug("Could not read hardware device metadata: %s", err)
+            return
+
+        if manufacturer:
+            self._manufacturer = manufacturer
+        if model:
+            self._model = model
 
     async def async_set_erg_watts(self, watts: int) -> None:
         async with self._lock:

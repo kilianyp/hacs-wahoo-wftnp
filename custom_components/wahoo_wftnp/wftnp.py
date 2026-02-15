@@ -22,11 +22,14 @@ def ble16_to_uuid(u16: int) -> uuid.UUID:
 
 
 FTMS_SERVICE_UUID = ble16_to_uuid(0x1826)
+DEVICE_INFO_SERVICE_UUID = ble16_to_uuid(0x180A)
 
 # FTMS characteristics
 FTMS_CONTROL_POINT_UUID = ble16_to_uuid(0x2AD9)  # Fitness Machine Control Point
 FTMS_STATUS_UUID = ble16_to_uuid(0x2ADA)  # Fitness Machine Status (optional)
 INDOOR_BIKE_DATA_UUID = ble16_to_uuid(0x2AD2)  # Indoor Bike Data (optional)
+MANUFACTURER_NAME_UUID = ble16_to_uuid(0x2A29)
+MODEL_NUMBER_UUID = ble16_to_uuid(0x2A24)
 
 
 # ---------------------------
@@ -317,6 +320,32 @@ class WFTNPClient:
         self, char_uuid: uuid.UUID, enable: bool = True
     ) -> None:
         await self._request(5, char_uuid.bytes + (b"\x01" if enable else b"\x00"))
+
+    @staticmethod
+    def _decode_text_characteristic(value: bytes) -> Optional[str]:
+        text = value.decode("utf-8", "ignore").replace("\x00", "").strip()
+        return text or None
+
+    async def read_device_information(self) -> Tuple[Optional[str], Optional[str]]:
+        """Read manufacturer/model from the Device Information service when available."""
+        manufacturer: Optional[str] = None
+        model: Optional[str] = None
+
+        services = await self.discover_services()
+        if DEVICE_INFO_SERVICE_UUID not in services:
+            return manufacturer, model
+
+        chars = await self.discover_characteristics(DEVICE_INFO_SERVICE_UUID)
+
+        if MANUFACTURER_NAME_UUID in chars:
+            value = await self.read_characteristic(MANUFACTURER_NAME_UUID)
+            manufacturer = self._decode_text_characteristic(value)
+
+        if MODEL_NUMBER_UUID in chars:
+            value = await self.read_characteristic(MODEL_NUMBER_UUID)
+            model = self._decode_text_characteristic(value)
+
+        return manufacturer, model
 
     # --------- FTMS convenience ----------
 

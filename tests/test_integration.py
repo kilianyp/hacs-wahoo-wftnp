@@ -53,6 +53,10 @@ async def _setup_entry(hass: HomeAssistant) -> MockConfigEntry:
             "custom_components.wahoo_wftnp.coordinator.WFTNPClient.discover_services",
             new=AsyncMock(return_value=[]),
         ),
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.read_device_information",
+            new=AsyncMock(return_value=(None, None)),
+        ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -90,6 +94,136 @@ async def test_setup_creates_entities_and_device(hass: HomeAssistant) -> None:
     state = hass.states.get(speed_entity_id)
     assert state is not None
     assert state.state in (STATE_UNAVAILABLE, "unknown")
+    assert state.attributes.get("friendly_name") == "KICKR CORE Speed"
+
+
+async def test_device_registry_uses_hardware_metadata(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="KICKR CORE",
+        data={
+            "host": "host.docker.internal",
+            "port": 36866,
+            "address": "192.168.1.10",
+            "name": "KICKR CORE",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.connect",
+            new=AsyncMock(),
+        ),
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.ftms_init",
+            new=AsyncMock(),
+        ),
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.request_control",
+            new=AsyncMock(),
+        ),
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.start_training",
+            new=AsyncMock(),
+        ),
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.discover_services",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.read_device_information",
+            new=AsyncMock(return_value=("Wahoo Fitness", "KICKR CORE v2")),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_reg = dr.async_get(hass)
+    device = device_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    assert device is not None
+    assert device.manufacturer == "Wahoo Fitness"
+    assert device.model == "KICKR CORE v2"
+
+
+async def test_entity_ids_use_device_name_and_metric_suffix(
+    hass: HomeAssistant,
+) -> None:
+    entry = await _setup_entry(hass)
+
+    entity_reg = er.async_get(hass)
+    speed_entity_id = entity_reg.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.entry_id}_speed_kmh"
+    )
+    cadence_entity_id = entity_reg.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.entry_id}_cadence_rpm"
+    )
+    power_entity_id = entity_reg.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.entry_id}_power_w"
+    )
+
+    assert speed_entity_id == "sensor.kickr_core_speed"
+    assert cadence_entity_id == "sensor.kickr_core_cadence"
+    assert power_entity_id == "sensor.kickr_core_power"
+
+
+async def test_existing_short_entity_id_is_migrated_to_device_prefixed_id(
+    hass: HomeAssistant,
+) -> None:
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="KICKR CORE",
+        data={
+            "host": "host.docker.internal",
+            "port": 36866,
+            "address": "192.168.1.10",
+            "name": "KICKR CORE",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    entity_reg = er.async_get(hass)
+    entity_reg.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{entry.entry_id}_cadence_rpm",
+        suggested_object_id="cadence",
+        config_entry=entry,
+    )
+
+    with (
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.connect",
+            new=AsyncMock(),
+        ),
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.ftms_init",
+            new=AsyncMock(),
+        ),
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.request_control",
+            new=AsyncMock(),
+        ),
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.start_training",
+            new=AsyncMock(),
+        ),
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.discover_services",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.read_device_information",
+            new=AsyncMock(return_value=(None, None)),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    migrated_entity_id = entity_reg.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.entry_id}_cadence_rpm"
+    )
+    assert migrated_entity_id == "sensor.kickr_core_cadence"
 
 
 async def test_services_call_client_methods(hass: HomeAssistant) -> None:
