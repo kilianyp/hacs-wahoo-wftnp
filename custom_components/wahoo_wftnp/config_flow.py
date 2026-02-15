@@ -38,7 +38,9 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         self._discovered: Dict[str, Dict[str, Any]] = {}
 
-    async def async_step_user(self, user_input: Dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: Dict[str, Any] | None = None
+    ) -> FlowResult:
         if user_input is not None:
             if user_input["device"] == "manual":
                 return await self.async_step_manual()
@@ -77,7 +79,9 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.OptionsFlow:
         return WahooKickrOptionsFlow(config_entry)
 
-    async def async_step_manual(self, user_input: Dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_manual(
+        self, user_input: Dict[str, Any] | None = None
+    ) -> FlowResult:
         errors = {}
 
         if user_input is not None:
@@ -104,7 +108,9 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="manual", data_schema=schema, errors=errors)
 
-    async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> FlowResult:
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> FlowResult:
         host = discovery_info.host
         address = discovery_info.address
         port = discovery_info.port
@@ -149,7 +155,9 @@ class WahooKickrOptionsFlow(config_entries.OptionsFlow):
     def __init__(self, entry: config_entries.ConfigEntry) -> None:
         self._entry = entry
 
-    async def async_step_init(self, user_input: Dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: Dict[str, Any] | None = None
+    ) -> FlowResult:
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 

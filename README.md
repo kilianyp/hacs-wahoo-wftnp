@@ -58,3 +58,23 @@ https://github.com/kilianyp/hacs-wahoo-wftnp
 ## Docker on macOS note
 
 If you run Home Assistant in Docker on macOS, mDNS discovery may not work. Use manual setup and consider a host-side TCP forward (e.g., socat) to reach the trainer.
+
+## Development
+
+Ruff formatting is configured via `pyproject.toml`.
+
+```bash
+# Apply formatting
+make format
+
+# Validate formatting (CI-friendly)
+make format-check
+
+# Install Git pre-commit hooks
+make precommit-install
+
+# Run hooks manually across all tracked files
+make precommit-run
+```
+
+The pre-commit hooks use your local `ruff` binary (`language: system`), so hook behavior and Ruff version stay aligned automatically.

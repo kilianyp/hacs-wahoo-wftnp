@@ -97,6 +97,14 @@ async def test_services_call_client_methods(hass: HomeAssistant) -> None:
 
     with (
         patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.request_control",
+            new=AsyncMock(),
+        ) as request_control,
+        patch(
+            "custom_components.wahoo_wftnp.coordinator.WFTNPClient.start_training",
+            new=AsyncMock(),
+        ) as start_training,
+        patch(
             "custom_components.wahoo_wftnp.coordinator.WFTNPClient.set_erg_watts",
             new=AsyncMock(),
         ) as set_erg,
@@ -120,6 +128,8 @@ async def test_services_call_client_methods(hass: HomeAssistant) -> None:
             blocking=True,
         )
         set_grade.assert_awaited_once()
+        request_control.assert_awaited_once()
+        start_training.assert_awaited_once()
 
 
 async def test_config_entry_state(hass: HomeAssistant) -> None:

@@ -147,9 +147,10 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         updated.update(data)
         updated["last_seen"] = dt_util.utcnow()
 
-        if self._update_throttle and (
-            now - self._last_publish_monotonic
-        ) < self._update_throttle:
+        if (
+            self._update_throttle
+            and (now - self._last_publish_monotonic) < self._update_throttle
+        ):
             return
 
         self._last_publish_monotonic = now
@@ -169,7 +170,9 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         )
         async with self._lock:
             if not self._connected:
-                await self._attempt_reconnect("Kickr Core disconnected; attempting reconnect")
+                await self._attempt_reconnect(
+                    "Kickr Core disconnected; attempting reconnect"
+                )
             else:
                 await self._verify_connection()
 
@@ -195,7 +198,7 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         if info_message and not self._reconnect_notice_sent:
             _LOGGER.info(info_message)
             self._reconnect_notice_sent = True
-        
+
         try:
             await self._connect_and_init()
         except Exception as err:
@@ -206,7 +209,7 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         """Ensure we have control of the trainer. Request it if needed."""
         if self._has_control:
             return
-        
+
         _LOGGER.info("Requesting control of trainer")
         try:
             await self._client.request_control()
@@ -233,10 +236,14 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 await self._client.close()
                 self._connected = False
             await self._client.connect(self._host, self._port)
-            await self._client.ftms_init(subscribe_indoor_bike_data=True, subscribe_status=False)
+            await self._client.ftms_init(
+                subscribe_indoor_bike_data=True, subscribe_status=False
+            )
             self._connected = True
             self._reconnect_notice_sent = False
-            _LOGGER.info("Connected in monitoring mode - control will be requested when needed")
+            _LOGGER.info(
+                "Connected in monitoring mode - control will be requested when needed"
+            )
             self._has_control = False
         except Exception as err:  # broad to surface in config flow
             _LOGGER.warning(

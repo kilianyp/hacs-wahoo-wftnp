@@ -16,6 +16,7 @@ from zeroconf import ServiceBrowser, ServiceListener, Zeroconf
 # BLE UUID helpers (expand 16-bit UUIDs to 128-bit base)
 # ---------------------------
 
+
 def ble16_to_uuid(u16: int) -> uuid.UUID:
     return uuid.UUID(f"0000{u16:04x}-0000-1000-8000-00805f9b34fb")
 
@@ -24,8 +25,8 @@ FTMS_SERVICE_UUID = ble16_to_uuid(0x1826)
 
 # FTMS characteristics
 FTMS_CONTROL_POINT_UUID = ble16_to_uuid(0x2AD9)  # Fitness Machine Control Point
-FTMS_STATUS_UUID = ble16_to_uuid(0x2ADA)         # Fitness Machine Status (optional)
-INDOOR_BIKE_DATA_UUID = ble16_to_uuid(0x2AD2)    # Indoor Bike Data (optional)
+FTMS_STATUS_UUID = ble16_to_uuid(0x2ADA)  # Fitness Machine Status (optional)
+INDOOR_BIKE_DATA_UUID = ble16_to_uuid(0x2AD2)  # Indoor Bike Data (optional)
 
 
 # ---------------------------
@@ -133,7 +134,9 @@ class WFTNPClient:
         self._pending: Dict[Tuple[int, int], asyncio.Future[Tuple[int, bytes]]] = {}
 
         self._rx_task: Optional[asyncio.Task[None]] = None
-        self._notify_cb: Optional[Callable[[uuid.UUID, bytes], Awaitable[None] | None]] = None
+        self._notify_cb: Optional[
+            Callable[[uuid.UUID, bytes], Awaitable[None] | None]
+        ] = None
 
         # caches
         self.ftms_control_point_uuid: Optional[uuid.UUID] = None
@@ -227,7 +230,10 @@ class WFTNPClient:
                     char_uuid = uuid.UUID(bytes=data[:16])
                     value = data[16:]
 
-                    if self.ftms_control_point_uuid and char_uuid == self.ftms_control_point_uuid:
+                    if (
+                        self.ftms_control_point_uuid
+                        and char_uuid == self.ftms_control_point_uuid
+                    ):
                         # FTMS CP responses arrive here
                         self._cp_queue.put_nowait(value)
 
@@ -246,7 +252,9 @@ class WFTNPClient:
 
         seq = self._next_seq()
         hdr = _HDR_STRUCT.pack(WFTNP_VERSION, mtype, seq, 0, len(payload))
-        fut: asyncio.Future[Tuple[int, bytes]] = asyncio.get_running_loop().create_future()
+        fut: asyncio.Future[Tuple[int, bytes]] = (
+            asyncio.get_running_loop().create_future()
+        )
         self._pending[(mtype, seq)] = fut
 
         self._writer.write(hdr + payload)
@@ -254,7 +262,9 @@ class WFTNPClient:
 
         resp_code, data = await fut
         if resp_code != 0:
-            raise WFTNPError(f"WFTNP request failed: type={mtype} resp_code={resp_code}")
+            raise WFTNPError(
+                f"WFTNP request failed: type={mtype} resp_code={resp_code}"
+            )
         return resp_code, data
 
     # --------- WFTNP operations ----------
@@ -263,16 +273,20 @@ class WFTNPClient:
         _, data = await self._request(1, b"")
         if len(data) % 16 != 0:
             raise WFTNPError(f"Malformed Discover Services response len={len(data)}")
-        return [uuid.UUID(bytes=data[i:i + 16]) for i in range(0, len(data), 16)]
+        return [uuid.UUID(bytes=data[i : i + 16]) for i in range(0, len(data), 16)]
 
-    async def discover_characteristics(self, service_uuid: uuid.UUID) -> Dict[uuid.UUID, int]:
+    async def discover_characteristics(
+        self, service_uuid: uuid.UUID
+    ) -> Dict[uuid.UUID, int]:
         _, data = await self._request(2, service_uuid.bytes)
         if len(data) < 16:
             raise WFTNPError("Malformed Discover Characteristics response")
 
         svc = uuid.UUID(bytes=data[:16])
         if svc != service_uuid:
-            raise WFTNPError(f"Discover Characteristics mismatch svc={svc} expected={service_uuid}")
+            raise WFTNPError(
+                f"Discover Characteristics mismatch svc={svc} expected={service_uuid}"
+            )
 
         recs = data[16:]
         if len(recs) % 17 != 0:
@@ -280,9 +294,11 @@ class WFTNPClient:
 
         out: Dict[uuid.UUID, int] = {}
         for i in range(0, len(recs), 17):
-            cu = uuid.UUID(bytes=recs[i:i + 16])
+            cu = uuid.UUID(bytes=recs[i : i + 16])
             props = recs[i + 16]
-            out[cu] = props  # READ=0x01 WRITE=0x02 NOTIFY=0x04 (as commonly used in WFTNP)
+            out[cu] = (
+                props  # READ=0x01 WRITE=0x02 NOTIFY=0x04 (as commonly used in WFTNP)
+            )
         return out
 
     async def read_characteristic(self, char_uuid: uuid.UUID) -> bytes:
@@ -297,7 +313,9 @@ class WFTNPClient:
     async def write_characteristic(self, char_uuid: uuid.UUID, value: bytes) -> None:
         await self._request(4, char_uuid.bytes + value)
 
-    async def enable_notifications(self, char_uuid: uuid.UUID, enable: bool = True) -> None:
+    async def enable_notifications(
+        self, char_uuid: uuid.UUID, enable: bool = True
+    ) -> None:
         await self._request(5, char_uuid.bytes + (b"\x01" if enable else b"\x00"))
 
     # --------- FTMS convenience ----------
@@ -325,7 +343,9 @@ class WFTNPClient:
         if subscribe_status and FTMS_STATUS_UUID in chars:
             await self.enable_notifications(FTMS_STATUS_UUID, True)
 
-    async def _await_cp_result(self, expected_req_opcode: int, timeout: float = 2.0) -> None:
+    async def _await_cp_result(
+        self, expected_req_opcode: int, timeout: float = 2.0
+    ) -> None:
         """
         Wait for FTMS Control Point response:
           0x80, <req_opcode>, <result_code>
@@ -368,7 +388,9 @@ class WFTNPClient:
 
     # --- high-level helpers ---
 
-    async def set_erg_watts(self, watts: int, *, min_watts: int = 0, max_watts: int = 600) -> None:
+    async def set_erg_watts(
+        self, watts: int, *, min_watts: int = 0, max_watts: int = 600
+    ) -> None:
         """
         Set Target Power (ERG).
         Payload: 0x05 + uint16 LE watts.
@@ -403,8 +425,8 @@ class WFTNPClient:
         """
         g = clamp(float(grade_percent), min_grade, max_grade)
         w = clamp(float(wind_mps), -50.0, 50.0)  # sanity clamp
-        crr_f = clamp(float(crr), 0.0, 0.0255)   # 0..255/10000
-        cw_f = clamp(float(cw), 0.0, 2.55)       # 0..255/100
+        crr_f = clamp(float(crr), 0.0, 0.0255)  # 0..255/10000
+        cw_f = clamp(float(cw), 0.0, 2.55)  # 0..255/100
 
         wind_raw = int(round(w * 1000.0))
         grade_raw = int(round(g * 100.0))
@@ -426,6 +448,7 @@ class WFTNPClient:
 # ---------------------------
 # Optional: Indoor Bike Data parsing (very basic)
 # ---------------------------
+
 
 def parse_indoor_bike_data(value: bytes) -> Dict[str, float]:
     """
