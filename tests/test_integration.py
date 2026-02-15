@@ -19,15 +19,19 @@ from custom_components.wahoo_wftnp.const import DOMAIN
 pytestmark = pytest.mark.asyncio
 
 
-async def _setup_entry(hass: HomeAssistant) -> MockConfigEntry:
+async def _setup_entry(
+    hass: HomeAssistant,
+    *,
+    title: str = "KICKR CORE",
+) -> MockConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="KICKR CORE",
+        title=title,
         data={
             "host": "host.docker.internal",
             "port": 36866,
             "address": "192.168.1.10",
-            "name": "KICKR CORE",
+            "name": title,
         },
     )
     entry.add_to_hass(hass)
@@ -165,6 +169,26 @@ async def test_entity_ids_use_device_name_and_metric_suffix(
     assert speed_entity_id == "sensor.kickr_core_speed"
     assert cadence_entity_id == "sensor.kickr_core_cadence"
     assert power_entity_id == "sensor.kickr_core_power"
+
+
+async def test_entity_name_uses_metric_and_friendly_name_uses_device(
+    hass: HomeAssistant,
+) -> None:
+    entry = await _setup_entry(hass, title="My Trainer")
+
+    entity_reg = er.async_get(hass)
+    cadence_entity_id = entity_reg.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.entry_id}_cadence_rpm"
+    )
+    assert cadence_entity_id == "sensor.my_trainer_cadence"
+
+    entity_entry = entity_reg.async_get(cadence_entity_id)
+    assert entity_entry is not None
+    assert entity_entry.original_name == "Cadence"
+
+    state = hass.states.get(cadence_entity_id)
+    assert state is not None
+    assert state.attributes.get("friendly_name") == "My Trainer Cadence"
 
 
 async def test_existing_short_entity_id_is_migrated_to_device_prefixed_id(

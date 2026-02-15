@@ -111,7 +111,8 @@ class KickrSensor(CoordinatorEntity[WahooKickrCoordinator], SensorEntity):
         device_name = entry.title or entry.data.get(CONF_NAME) or "Wahoo"
         self._device_name = device_name
         self._entry_id = entry.entry_id
-        self._attr_name = f"{device_name} {description.name}"
+        self._attr_has_entity_name = True
+        self._attr_name = description.name
         device_slug = slugify(device_name)
         self._attr_suggested_object_id = f"{device_slug}_{description.object_id_suffix}"
 
