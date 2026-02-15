@@ -68,6 +68,7 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         self._client = WFTNPClient()
         self._lock = asyncio.Lock()
         self._connected = False
+        self._has_control = False
         self._unsub_poll = None
         self._reconnect_notice_sent = False
         self._sleep_timeout = float(
