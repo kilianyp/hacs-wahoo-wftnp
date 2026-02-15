@@ -21,5 +21,17 @@
     "abort": {
       "not_found": "Device no longer found."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "sleep_timeout": "Sleep timeout (seconds)",
+          "last_seen_interval": "Last seen update interval (seconds)",
+          "update_throttle": "Update throttle (seconds, 0 = disabled)"
+        }
+      }
+    }
   }
 }

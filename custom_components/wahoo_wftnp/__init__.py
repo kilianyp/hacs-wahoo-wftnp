@@ -35,7 +35,7 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    coordinator = WahooKickrCoordinator(hass, entry.data)
+    coordinator = WahooKickrCoordinator(hass, entry)
     await coordinator.async_setup()
     try:
         await coordinator.async_config_entry_first_refresh()

@@ -341,13 +341,6 @@ class WFTNPClient:
                     )
                 return
 
-    async def zwift_like_handshake(self) -> None:
-        # Common “become controller” sequence
-        await self.request_control()
-        await self.reset()
-        await self.request_control()
-        await self.start_training()
-
     # --- FTMS opcodes ---
 
     async def request_control(self) -> None:

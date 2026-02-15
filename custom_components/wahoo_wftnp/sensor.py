@@ -3,15 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from datetime import datetime
+from typing import Optional
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.const import UnitOfLength, UnitOfPower, UnitOfSpeed
+from homeassistant.const import UnitOfPower, UnitOfSpeed
 
 from .const import DOMAIN
 from .coordinator import WahooKickrCoordinator
@@ -40,6 +46,12 @@ SENSORS: tuple[KickrSensorDescription, ...] = (
         name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    KickrSensorDescription(
+        key="last_seen",
+        name="Last Seen",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -77,18 +89,13 @@ class KickrSensor(CoordinatorEntity[WahooKickrCoordinator], SensorEntity):
         )
 
     @property
-    def native_value(self) -> Optional[float]:
+    def native_value(self) -> Optional[float | datetime]:
         data = self.coordinator.data or {}
         value = data.get(self.entity_description.key)
         if value is None:
             return None
+        if self.entity_description.key == "last_seen":
+            if isinstance(value, datetime):
+                return value
+            return None
         return float(value)
-
-    @property
-    def extra_state_attributes(self) -> Dict[str, Any] | None:
-        if not self.coordinator.data:
-            return None
-        last_seen = self.coordinator.data.get("last_seen")
-        if not last_seen:
-            return None
-        return {"last_seen": last_seen}

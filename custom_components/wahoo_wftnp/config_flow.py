@@ -11,7 +11,20 @@ from homeassistant import config_entries
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PORT, DOMAIN, DEFAULT_PORT
+from .const import (
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_LAST_SEEN_INTERVAL,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SLEEP_TIMEOUT,
+    CONF_UPDATE_THROTTLE,
+    DEFAULT_LAST_SEEN_INTERVAL,
+    DEFAULT_PORT,
+    DEFAULT_SLEEP_TIMEOUT,
+    DEFAULT_UPDATE_THROTTLE,
+    DOMAIN,
+)
 from .wftnp import WFTNPClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,6 +70,12 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema({vol.Required("device"): vol.In(choices)})
         return self.async_show_form(step_id="user", data_schema=schema)
+
+    @staticmethod
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        return WahooKickrOptionsFlow(config_entry)
 
     async def async_step_manual(self, user_input: Dict[str, Any] | None = None) -> FlowResult:
         errors = {}
@@ -122,3 +141,35 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: dev.address,
                 CONF_PORT: dev.port,
             }
+
+
+class WahooKickrOptionsFlow(config_entries.OptionsFlow):
+    """Handle options flow for Wahoo Kickr Core."""
+
+    def __init__(self, entry: config_entries.ConfigEntry) -> None:
+        self._entry = entry
+
+    async def async_step_init(self, user_input: Dict[str, Any] | None = None) -> FlowResult:
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        options = self._entry.options
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SLEEP_TIMEOUT,
+                    default=options.get(CONF_SLEEP_TIMEOUT, DEFAULT_SLEEP_TIMEOUT),
+                ): vol.Coerce(int),
+                vol.Optional(
+                    CONF_LAST_SEEN_INTERVAL,
+                    default=options.get(
+                        CONF_LAST_SEEN_INTERVAL, DEFAULT_LAST_SEEN_INTERVAL
+                    ),
+                ): vol.Coerce(int),
+                vol.Optional(
+                    CONF_UPDATE_THROTTLE,
+                    default=options.get(CONF_UPDATE_THROTTLE, DEFAULT_UPDATE_THROTTLE),
+                ): vol.Coerce(int),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

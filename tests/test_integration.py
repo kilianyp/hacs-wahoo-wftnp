@@ -78,10 +78,14 @@ async def test_setup_creates_entities_and_device(hass: HomeAssistant) -> None:
     power_entity_id = entity_reg.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.entry_id}_power_w"
     )
+    last_seen_entity_id = entity_reg.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.entry_id}_last_seen"
+    )
 
     assert speed_entity_id is not None
     assert cadence_entity_id is not None
     assert power_entity_id is not None
+    assert last_seen_entity_id is not None
 
     state = hass.states.get(speed_entity_id)
     assert state is not None
