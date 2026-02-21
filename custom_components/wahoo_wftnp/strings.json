@@ -13,7 +13,7 @@
         "data": {
           "host": "Host",
           "port": "Port",
-          "name": "Name",
+          "name": "Name"
         }
       }
     },
