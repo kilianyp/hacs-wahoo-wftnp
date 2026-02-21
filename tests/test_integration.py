@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -89,16 +89,24 @@ async def test_setup_creates_entities_and_device(hass: HomeAssistant) -> None:
     last_seen_entity_id = entity_reg.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.entry_id}_last_seen"
     )
+    connection_entity_id = entity_reg.async_get_entity_id(
+        "switch", DOMAIN, f"{entry.entry_id}_connection"
+    )
 
     assert speed_entity_id is not None
     assert cadence_entity_id is not None
     assert power_entity_id is not None
     assert last_seen_entity_id is not None
+    assert connection_entity_id is not None
 
     state = hass.states.get(speed_entity_id)
     assert state is not None
     assert state.state in (STATE_UNAVAILABLE, "unknown")
     assert state.attributes.get("friendly_name") == "KICKR CORE Speed"
+
+    connection_state = hass.states.get(connection_entity_id)
+    assert connection_state is not None
+    assert connection_state.state == STATE_ON
 
 
 async def test_device_registry_uses_hardware_metadata(hass: HomeAssistant) -> None:

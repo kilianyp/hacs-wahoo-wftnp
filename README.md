@@ -77,6 +77,8 @@ After setup, open the integration's options to tune update behavior:
 
 Higher `update_throttle` values reduce state churn and database growth at the cost of less frequent updates.
 
+The integration also exposes a diagnostic `Connection` switch in the device UI so you can manually disconnect/reconnect without changing options.
+
 ## Docker on macOS note
 
 If you run Home Assistant in Docker on macOS, mDNS discovery may not work. Use manual setup and consider a host-side TCP forward (e.g., socat) to reach the trainer.

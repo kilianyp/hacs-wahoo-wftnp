@@ -82,6 +82,7 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         self._update_throttle = float(
             entry.options.get(CONF_UPDATE_THROTTLE, DEFAULT_UPDATE_THROTTLE)
         )
+        self._manual_disconnect = False
         self._last_activity_monotonic = time.monotonic()
         self._last_publish_monotonic = 0.0
         self._last_seen_publish_monotonic = 0.0
@@ -109,6 +110,10 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
     @property
     def model(self) -> str:
         return self._model
+
+    @property
+    def is_manually_disconnected(self) -> bool:
+        return self._manual_disconnect
 
     async def async_setup(self) -> None:
         async def on_notify(char_uuid, value: bytes) -> None:
@@ -180,6 +185,13 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             self._port,
         )
         async with self._lock:
+            if self._manual_disconnect:
+                if self._connected:
+                    await self._client.close()
+                    self._connected = False
+                    self._has_control = False
+                return self.data or {}
+
             if not self._connected:
                 await self._attempt_reconnect(
                     "Kickr Core disconnected; attempting reconnect"
@@ -218,6 +230,8 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
 
     async def _ensure_control(self) -> None:
         """Ensure we have control of the trainer. Request it if needed."""
+        await self._ensure_connected()
+
         if self._has_control:
             return
 
@@ -234,12 +248,41 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             _LOGGER.error("Control point handshake failed: %s", err)
             raise RuntimeError(f"Failed to acquire control: {err}") from err
 
+    async def _ensure_connected(self) -> None:
+        if self._manual_disconnect:
+            raise RuntimeError(
+                "Trainer is manually disconnected; re-enable connection in the UI first"
+            )
+        if self._connected:
+            return
+        await self._connect_and_init()
+
+    async def async_disconnect(self) -> None:
+        async with self._lock:
+            self._manual_disconnect = True
+            self._has_control = False
+
+            if self._connected:
+                await self._client.close()
+                self._connected = False
+
+        self.async_update_listeners()
+
+    async def async_connect(self) -> None:
+        async with self._lock:
+            self._manual_disconnect = False
+            if not self._connected:
+                await self._connect_and_init()
+
+        self.async_update_listeners()
+
     async def async_shutdown(self) -> None:
         if self._unsub_poll:
             self._unsub_poll()
             self._unsub_poll = None
         await self._client.close()
         self._connected = False
+        self._manual_disconnect = False
 
     async def _connect_and_init(self) -> None:
         try:

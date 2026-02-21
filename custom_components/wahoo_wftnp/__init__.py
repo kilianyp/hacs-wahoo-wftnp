@@ -21,7 +21,7 @@ from .const import (
 )
 from .coordinator import WahooKickrCoordinator
 
-PLATFORMS: list[str] = ["sensor"]
+PLATFORMS: list[str] = ["sensor", "switch"]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)

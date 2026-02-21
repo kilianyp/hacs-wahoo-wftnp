@@ -112,11 +112,11 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
         host = discovery_info.host
-        address = discovery_info.address
-        port = discovery_info.port
+        address = discovery_info.addresses[0] if discovery_info.addresses else host
+        port = discovery_info.port or DEFAULT_PORT
         name = discovery_info.name or "Wahoo Kickr Core"
 
-        await self.async_set_unique_id(host or address)
+        await self.async_set_unique_id(host or name)
         self._abort_if_unique_id_configured()
 
         self.context["title_placeholders"] = {"name": name}
