@@ -1,7 +1,5 @@
 # Wahoo Kickr Core Home Assistant Integration (Custom)
 
-WARNING: ⚠️ See #2. The integration is leading to excessive database growth. I recommend deactivating the extension or unplugging the device while not in use.
-
 This repository contains a custom Home Assistant integration for a Wahoo KICKR CORE trainer using WFTNP over TCP.
 
 ## Important notes
