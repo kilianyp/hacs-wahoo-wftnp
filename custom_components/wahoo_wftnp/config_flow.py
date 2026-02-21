@@ -12,7 +12,6 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    CONF_ADDRESS,
     CONF_HOST,
     CONF_LAST_SEEN_INTERVAL,
     CONF_NAME,
@@ -49,7 +48,7 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not dev:
                 return self.async_abort(reason="not_found")
 
-            await self.async_set_unique_id(dev.get(CONF_HOST) or dev.get(CONF_ADDRESS))
+            await self.async_set_unique_id(dev.get(CONF_HOST))
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
@@ -57,7 +56,6 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_NAME: dev[CONF_NAME],
                     CONF_HOST: dev[CONF_HOST],
-                    CONF_ADDRESS: dev.get(CONF_ADDRESS, ""),
                     CONF_PORT: dev[CONF_PORT],
                 },
             )
@@ -93,7 +91,6 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_NAME: user_input.get(CONF_NAME) or user_input[CONF_HOST],
                     CONF_HOST: user_input[CONF_HOST],
-                    CONF_ADDRESS: user_input.get(CONF_ADDRESS, ""),
                     CONF_PORT: user_input[CONF_PORT],
                 },
             )
@@ -103,7 +100,6 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST): str,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 vol.Optional(CONF_NAME): str,
-                vol.Optional(CONF_ADDRESS): str,
             }
         )
         return self.async_show_form(step_id="manual", data_schema=schema, errors=errors)
@@ -112,7 +108,6 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
         host = discovery_info.host
-        address = discovery_info.addresses[0] if discovery_info.addresses else host
         port = discovery_info.port or DEFAULT_PORT
         name = discovery_info.name or "Wahoo Kickr Core"
 
@@ -126,7 +121,6 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_NAME: name,
                 CONF_HOST: host,
-                CONF_ADDRESS: address or "",
                 CONF_PORT: port,
             },
         )
@@ -140,11 +134,10 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return
 
         for dev in devices.values():
-            key = dev.address or dev.host or dev.name
+            key = dev.host or dev.name
             self._discovered[key] = {
                 CONF_NAME: dev.name,
-                CONF_HOST: dev.address or dev.host,
-                CONF_ADDRESS: dev.address,
+                CONF_HOST: dev.host,
                 CONF_PORT: dev.port,
             }
 

@@ -15,7 +15,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_ADDRESS,
     CONF_HOST,
     CONF_LAST_SEEN_INTERVAL,
     CONF_NAME,
@@ -63,7 +62,6 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         )
         self._host: str = entry_data[CONF_HOST]
         self._port: int = entry_data[CONF_PORT]
-        self._address: str = entry_data.get(CONF_ADDRESS, "")
 
         self._client = WFTNPClient()
         self._lock = asyncio.Lock()
@@ -86,10 +84,6 @@ class WahooKickrCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         self._last_activity_monotonic = time.monotonic()
         self._last_publish_monotonic = 0.0
         self._last_seen_publish_monotonic = 0.0
-
-    @property
-    def address(self) -> str:
-        return self._address
 
     @property
     def host(self) -> str:

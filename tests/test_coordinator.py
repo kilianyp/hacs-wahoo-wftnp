@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.wahoo_wftnp.const import (
-    CONF_ADDRESS,
     CONF_HOST,
     CONF_LAST_SEEN_INTERVAL,
     CONF_NAME,
@@ -33,7 +32,6 @@ async def test_idle_packets_do_not_reset_activity_timer(hass: HomeAssistant) -> 
         data={
             CONF_HOST: "host.docker.internal",
             CONF_PORT: 36866,
-            CONF_ADDRESS: "192.168.1.10",
             CONF_NAME: "KICKR CORE",
         },
         options={
@@ -75,7 +73,6 @@ async def test_manual_disconnect_sets_state_and_closes_client(
         data={
             CONF_HOST: "host.docker.internal",
             CONF_PORT: 36866,
-            CONF_ADDRESS: "192.168.1.10",
             CONF_NAME: "KICKR CORE",
         },
         options={},
@@ -100,7 +97,6 @@ async def test_manual_disconnect_skips_background_reconnect(
         data={
             CONF_HOST: "host.docker.internal",
             CONF_PORT: 36866,
-            CONF_ADDRESS: "192.168.1.10",
             CONF_NAME: "KICKR CORE",
         },
         options={},
@@ -125,7 +121,6 @@ async def test_manual_connect_reconnects_when_disconnected(
         data={
             CONF_HOST: "host.docker.internal",
             CONF_PORT: 36866,
-            CONF_ADDRESS: "192.168.1.10",
             CONF_NAME: "KICKR CORE",
         },
         options={},
@@ -150,7 +145,6 @@ async def test_control_request_fails_when_manually_disconnected(
         data={
             CONF_HOST: "host.docker.internal",
             CONF_PORT: 36866,
-            CONF_ADDRESS: "192.168.1.10",
             CONF_NAME: "KICKR CORE",
         },
         options={},

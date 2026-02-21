@@ -14,7 +14,6 @@
           "host": "Host",
           "port": "Port",
           "name": "Name",
-          "address": "Address"
         }
       }
     },

@@ -65,7 +65,6 @@ When adding the integration, you can either pick an auto-discovered trainer or u
 - `host` (manual): Hostname or IP address of the trainer.
 - `port` (manual): TCP port used by WFTNP. Default: `5555`.
 - `name` (manual): Friendly device name shown in Home Assistant.
-- `address` (manual): Optional address field used for metadata/display.
 
 ### Options
 

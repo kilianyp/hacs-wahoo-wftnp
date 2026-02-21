@@ -60,7 +60,6 @@ class FTMSControlPointError(RuntimeError):
 class DiscoveredDevice:
     name: str
     host: str
-    address: str
     port: int
     properties: Dict[str, str]
 
@@ -89,14 +88,10 @@ class _WahooTNPListener(ServiceListener):
                 vs = repr(v)
             props[ks] = vs
 
-        addr = ""
-        if info.addresses:
-            addr = socket.inet_ntoa(info.addresses[0])
 
         dev = DiscoveredDevice(
             name=name,
             host=(info.server or "").rstrip("."),
-            address=addr,
             port=info.port,
             properties=props,
         )

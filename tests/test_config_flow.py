@@ -11,7 +11,6 @@ from custom_components.wahoo_wftnp.config_flow import (
     WahooKickrConfigFlow,
 )
 from custom_components.wahoo_wftnp.const import (
-    CONF_ADDRESS,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -29,7 +28,6 @@ async def test_zeroconf_step_uses_current_host_and_addresses_fields() -> None:
     result = await flow.async_step_zeroconf(
         SimpleNamespace(
             host="192.168.1.10",
-            addresses=["192.168.1.10"],
             port=36866,
             name="KICKR CORE",
         )
@@ -43,7 +41,6 @@ async def test_zeroconf_step_uses_current_host_and_addresses_fields() -> None:
     assert result["data"] == {
         CONF_NAME: "KICKR CORE",
         CONF_HOST: "192.168.1.10",
-        CONF_ADDRESS: "192.168.1.10",
         CONF_PORT: 36866,
     }
 

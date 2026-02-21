@@ -30,7 +30,6 @@ async def _setup_entry(
         data={
             "host": "host.docker.internal",
             "port": 36866,
-            "address": "192.168.1.10",
             "name": title,
         },
     )
@@ -116,7 +115,6 @@ async def test_device_registry_uses_hardware_metadata(hass: HomeAssistant) -> No
         data={
             "host": "host.docker.internal",
             "port": 36866,
-            "address": "192.168.1.10",
             "name": "KICKR CORE",
         },
     )
@@ -208,7 +206,6 @@ async def test_existing_short_entity_id_is_migrated_to_device_prefixed_id(
         data={
             "host": "host.docker.internal",
             "port": 36866,
-            "address": "192.168.1.10",
             "name": "KICKR CORE",
         },
     )
