@@ -15,11 +15,20 @@
           "port": "Port",
           "name": "Name"
         }
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered Wahoo trainer",
+        "description": "Do you want to add {name}?",
+        "data": {
+          "name": "Name"
+        }
       }
     },
     "abort": {
-      "not_found": "Device no longer found."
-    }
+      "not_found": "Device no longer found.",
+      "already_configured": "Device is already configured."
+    },
+    "flow_title": "{name}"
   },
   "options": {
     "step": {

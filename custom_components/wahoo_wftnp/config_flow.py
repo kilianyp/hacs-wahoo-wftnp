@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
 from .const import (
     CONF_HOST,
@@ -29,6 +29,15 @@ from .wftnp import WFTNPClient
 _LOGGER = logging.getLogger(__name__)
 
 
+def _friendly_name(service_name: str) -> str:
+    """Strip the mDNS service type, e.g. "KICKR CORE 1234._wahoo-fitness-tnp..."."""
+    return service_name.split("._", 1)[0].strip()
+
+
+def _normalize_host(host: str) -> str:
+    return host.rstrip(".").lower()
+
+
 class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Wahoo Kickr Core."""
 
@@ -36,6 +45,7 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         self._discovered: Dict[str, Dict[str, Any]] = {}
+        self._zeroconf_device: Dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: Dict[str, Any] | None = None
@@ -48,8 +58,9 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not dev:
                 return self.async_abort(reason="not_found")
 
-            await self.async_set_unique_id(dev.get(CONF_HOST))
+            await self.async_set_unique_id(user_input["device"])
             self._abort_if_unique_id_configured()
+            self._abort_if_host_configured(dev[CONF_HOST])
 
             return self.async_create_entry(
                 title=dev[CONF_NAME],
@@ -85,6 +96,7 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_HOST])
             self._abort_if_unique_id_configured()
+            self._abort_if_host_configured(user_input[CONF_HOST])
 
             return self.async_create_entry(
                 title=user_input.get(CONF_NAME) or user_input[CONF_HOST],
@@ -109,21 +121,57 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         host = discovery_info.host
         port = discovery_info.port or DEFAULT_PORT
-        name = discovery_info.name or "Wahoo Kickr Core"
+        service_name = discovery_info.name or ""
+        hostname = getattr(discovery_info, "hostname", None) or ""
+        unique_id = service_name or host
 
-        await self.async_set_unique_id(host or name)
-        self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host, CONF_PORT: port})
 
+        # Entries created before 0.4.1 used the host (IP or mDNS hostname) as
+        # unique_id, so discovery could not match them and created a duplicate.
+        # Adopt such an entry instead of offering the trainer a second time.
+        if entry := self._find_entry_by_host(host, hostname):
+            self.hass.config_entries.async_update_entry(entry, unique_id=unique_id)
+            return self.async_abort(reason="already_configured")
+
+        name = _friendly_name(service_name) or "Wahoo Kickr Core"
+        self._zeroconf_device = {CONF_NAME: name, CONF_HOST: host, CONF_PORT: port}
         self.context["title_placeholders"] = {"name": name}
+        return await self.async_step_zeroconf_confirm()
 
-        return self.async_create_entry(
-            title=name,
-            data={
-                CONF_NAME: name,
-                CONF_HOST: host,
-                CONF_PORT: port,
-            },
+    async def async_step_zeroconf_confirm(
+        self, user_input: Dict[str, Any] | None = None
+    ) -> FlowResult:
+        device = self._zeroconf_device
+        if user_input is not None:
+            name = user_input.get(CONF_NAME) or device[CONF_NAME]
+            return self.async_create_entry(
+                title=name,
+                data={**device, CONF_NAME: name},
+            )
+
+        schema = vol.Schema({vol.Optional(CONF_NAME, default=device[CONF_NAME]): str})
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            data_schema=schema,
+            description_placeholders={"name": device[CONF_NAME]},
         )
+
+    def _find_entry_by_host(self, *hosts: str) -> config_entries.ConfigEntry | None:
+        candidates = {_normalize_host(host) for host in hosts if host}
+        for entry in self._async_current_entries(include_ignore=False):
+            known = {
+                _normalize_host(entry.unique_id or ""),
+                _normalize_host(str(entry.data.get(CONF_HOST, ""))),
+            }
+            if candidates & known:
+                return entry
+        return None
+
+    def _abort_if_host_configured(self, host: str) -> None:
+        if self._find_entry_by_host(host):
+            raise AbortFlow("already_configured")
 
     async def _async_discover(self) -> None:
         self._discovered = {}
@@ -133,10 +181,13 @@ class WahooKickrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Discovery failed: %s", err)
             return
 
+        configured = self._async_current_ids()
         for dev in devices.values():
-            key = dev.host or dev.name
+            key = dev.name or dev.host
+            if key in configured or self._find_entry_by_host(dev.host):
+                continue
             self._discovered[key] = {
-                CONF_NAME: dev.name,
+                CONF_NAME: _friendly_name(dev.name) or dev.host,
                 CONF_HOST: dev.host,
                 CONF_PORT: dev.port,
             }
